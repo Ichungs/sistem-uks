@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard UKS - Sistem Registrasi Kesehatan</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK (Modular) -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <div class="app-container">
+        <header class="glass header">
+            <div class="header-left">
+                <div class="logo-icon"><i data-lucide="activity"></i></div>
+                <div class="header-title">
+                    <h1>Purwarupa Registrasi UKS</h1>
+                    <p class="subtitle">Sistem Monitoring Kesehatan Sekolah Berbasis IoT</p>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="date-navigator glass">
+                    <button class="date-nav-btn" id="prevDayBtn" aria-label="Hari Sebelumnya">
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <div class="date-display" id="currentDateDisplay">Memuat...</div>
+                    <button class="date-nav-btn" id="nextDayBtn" aria-label="Hari Berikutnya">
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="status-badge" id="systemStatus">
+                    <i data-lucide="send" class="telegram-icon"></i>
+                    <span class="status-dot"></span>
+                    <span class="status-text">Mendengarkan Firebase...</span>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <section class="stats-grid">
+                <div class="glass stat-card">
+                    <div class="stat-icon blue"><i data-lucide="users"></i></div>
+                    <div class="stat-info"><h3>Total Kunjungan</h3><p class="stat-value" id="totalVisits">0</p></div>
+                </div>
+                <div class="glass stat-card">
+                    <div class="stat-icon red"><i data-lucide="heart-pulse"></i></div>
+                    <div class="stat-info"><h3>Rata-rata HR</h3><p class="stat-value"><span id="avgHR">--</span> <span class="unit">bpm</span></p></div>
+                </div>
+                <div class="glass stat-card">
+                    <div class="stat-icon green"><i data-lucide="wind"></i></div>
+                    <div class="stat-info"><h3>Rata-rata SpO₂</h3><p class="stat-value"><span id="avgSpO2">--</span> <span class="unit">%</span></p></div>
+                </div>
+                <div class="glass stat-card">
+                    <div class="stat-icon purple"><i data-lucide="shield-check"></i></div>
+                    <div class="stat-info"><h3>Verifikasi Sukses</h3><p class="stat-value" id="successRate">0%</p></div>
+                </div>
+            </section>
+
+            <section class="content-grid">
+                <div class="glass panel feed-panel">
+                    <div class="panel-header">
+                        <h2><i data-lucide="radio"></i> Alur Registrasi Real-time</h2>
+                        <span class="badge" id="liveBadge">Live</span>
+                    </div>
+                    <div class="feed-list" id="liveFeed">
+                        <div class="empty-state"><i data-lucide="inbox"></i><p>Menunggu data masuk dari Firebase...</p></div>
+                    </div>
+                </div>
+                <div class="glass panel chart-panel">
+                    <div class="panel-header"><h2><i data-lucide="trending-up"></i> Tren Metrik Kesehatan</h2></div>
+                    <div class="chart-container"><canvas id="healthChart"></canvas></div>
+                </div>
+            </section>
+
+            <section class="glass panel flowchart-panel">
+                <div class="panel-header"><h2><i data-lucide="workflow"></i> Arsitektur Sistem & Alur Data</h2></div>
+                <div class="flowchart-container">
+                    <div class="flow-column">
+                        <h4 class="flow-title">Masukan</h4>
+                        <div class="flow-node input-node"><i data-lucide="credit-card"></i> Kartu RFID</div>
+                        <div class="flow-node input-node"><i data-lucide="scan-face"></i> Wajah Siswa</div>
+                        <div class="flow-node input-node"><i data-lucide="hand"></i> Jari (PPG)</div>
+                    </div>
+                    <div class="flow-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="flow-column">
+                        <h4 class="flow-title">Perangkat Purwarupa</h4>
+                        <div class="flow-node device-node"><i data-lucide="cpu"></i> RC522 + ESP32 DevKit</div>
+                        <div class="flow-node device-node"><i data-lucide="camera"></i> ESP32-CAM (OV2640)</div>
+                        <div class="flow-node device-node"><i data-lucide="activity"></i> Sensor MAX30102</div>
+                    </div>
+                    <div class="flow-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="flow-column">
+                        <h4 class="flow-title">Pemrosesan (Server)</h4>
+                        <div class="flow-node server-node"><i data-lucide="server"></i> Python + Flask<br><small>face_recognition (CNN)</small></div>
+                    </div>
+                    <div class="flow-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="flow-column">
+                        <h4 class="flow-title">Penyimpanan & Output</h4>
+                        <div class="flow-node output-node"><i data-lucide="database"></i> Firebase Realtime DB</div>
+                        <div class="flow-node output-node active"><i data-lucide="send"></i> Bot Telegram & Dashboard</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/theme.js"></script>
+    <!-- Perhatikan type="module" di sini -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
